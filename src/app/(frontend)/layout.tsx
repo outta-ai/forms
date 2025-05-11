@@ -1,19 +1,22 @@
-import React from 'react'
-import './styles.css'
+import type { PropsWithChildren } from "react";
+
+import Providers from "./providers";
+
+import "./styles.css";
 
 export const metadata = {
-  description: 'A blank template using Payload in a Next.js app.',
-  title: 'Payload Blank Template',
-}
+	title: "OUTTA Forms",
+	description: "OUTTA Forms",
+};
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
-  const { children } = props
+export default function RootLayout(props: PropsWithChildren) {
+	const { children } = props;
 
-  return (
-    <html lang="en">
-      <body>
-        <main>{children}</main>
-      </body>
-    </html>
-  )
+	return (
+		<html lang="ko-KR">
+			<body>
+				<Providers>{children}</Providers>
+			</body>
+		</html>
+	);
 }
