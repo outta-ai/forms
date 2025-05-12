@@ -4,10 +4,10 @@ import { useCallback } from "react";
 
 import type { Form } from "@/payload-types";
 
-import { useSession } from "next-auth/react";
 import { type Content, EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ky from "ky";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -49,7 +49,7 @@ export function StartView({ form, responseId, formPath }: Props) {
 	}, [router, formPath, responseId, session?.user.payload_id, form.id]);
 
 	return (
-		<div className="w-full h-full [&&]:h-screen py-3 md:py-12 px-3 md:px-6">
+		<div className="w-full h-full [&&]:h-dvh py-3 md:py-12 px-3 md:px-6">
 			<div className="container mx-auto flex flex-col h-full">
 				<div className="flex-1 overflow-y-auto">
 					<h1 className="text-2xl font-bold">{form.name}</h1>

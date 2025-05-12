@@ -85,7 +85,7 @@ export function QuestionView({ responseId, section, question }: Props) {
 
 	return (
 		<InputContext.Provider value={{ value, setValue, setValid }}>
-			<div className="w-full h-full [&&]:h-screen py-3 md:py-12 px-3 md:px-6">
+			<div className="w-full h-full [&&]:h-dvh py-3 md:py-12 px-3 md:px-6">
 				<div className="container mx-auto flex flex-col h-full">
 					<div className="flex-1 overflow-y-auto">
 						<h1 className="text-2xl font-bold">{section.title}</h1>
