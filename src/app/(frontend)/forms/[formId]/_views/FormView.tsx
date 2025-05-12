@@ -17,6 +17,10 @@ export async function FormView({ form, response, start, formPath }: Props) {
 		return <ErrorView errorId="no_sections" />;
 	}
 
+	if (form.settings?.disable_new_response) {
+		return <ErrorView errorId="no_new_responses" />;
+	}
+
 	if (!response?.data) {
 		return <StartView form={form} formPath={formPath} />;
 	}

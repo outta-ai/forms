@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { TriangleAlert } from "lucide-react";
 
 type Props = {
-	errorId: "not_found" | "multiple_forms" | "no_sections" | "no_questions";
+	errorId:
+		| "not_found"
+		| "multiple_forms"
+		| "no_sections"
+		| "no_questions"
+		| "no_new_responses";
 };
 
 export function ErrorView({ errorId }: Props) {
@@ -13,6 +18,17 @@ export function ErrorView({ errorId }: Props) {
 			<div className="flex flex-col items-center justify-center h-full">
 				<TriangleAlert className="w-12 h-12 text-muted-foreground" />
 				<p className="text-muted-foreground mt-3">정상적인 접근이 아닙니다</p>
+			</div>
+		);
+	}
+
+	if (errorId === "no_new_responses") {
+		return (
+			<div className="flex flex-col items-center justify-center h-full">
+				<TriangleAlert className="w-12 h-12 text-muted-foreground" />
+				<p className="text-muted-foreground mt-3">
+					새로운 응답일 더 이상 받지 않습니다
+				</p>
 			</div>
 		);
 	}
