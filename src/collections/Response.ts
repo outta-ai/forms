@@ -2,6 +2,10 @@ import type { CollectionConfig } from "payload";
 
 export const Response: CollectionConfig = {
 	slug: "response",
+	access: {
+		create: () => true,
+		update: () => true,
+	},
 	fields: [
 		{
 			type: "relationship",
