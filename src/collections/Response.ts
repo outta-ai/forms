@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload";
 export const Response: CollectionConfig = {
 	slug: "response",
 	access: {
+		read: () => true,
 		create: () => true,
 		update: () => true,
 	},
