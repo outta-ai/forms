@@ -47,7 +47,7 @@ export function MultipleSelectInput({ className, option }: Props) {
 				<div key={option.id} className="mt-3 flex">
 					<Checkbox
 						id={option.id ?? ""}
-						className="mr-1"
+						className="mr-1 cursor-pointer"
 						checked={value.split(",").includes(option.id ?? "")}
 						onCheckedChange={(checked) => {
 							const currentValue = value.split(",");
@@ -61,7 +61,9 @@ export function MultipleSelectInput({ className, option }: Props) {
 							}
 						}}
 					/>
-					<Label htmlFor={option.id ?? ""}>{option.label}</Label>
+					<Label htmlFor={option.id ?? ""} className="cursor-pointer">
+						{option.label}
+					</Label>
 				</div>
 			))}
 		</div>

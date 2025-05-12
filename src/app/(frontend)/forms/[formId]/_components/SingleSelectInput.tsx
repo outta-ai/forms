@@ -7,9 +7,9 @@ import type { Option } from "@/payload-types";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
-import { InputContext } from "../_contexts/InputContext";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import ky from "ky";
+import { InputContext } from "../_contexts/InputContext";
 
 type Props = {
 	className?: string;
@@ -54,9 +54,11 @@ export function SingleSelectInput({ className, option }: Props) {
 					<RadioGroupItem
 						id={option.id ?? ""}
 						value={option.id ?? ""}
-						className="mr-1"
+						className="mr-1 cursor-pointer"
 					/>
-					<Label htmlFor={option.id ?? ""}>{option.label}</Label>
+					<Label htmlFor={option.id ?? ""} className="cursor-pointer">
+						{option.label}
+					</Label>
 				</div>
 			))}
 		</RadioGroup>

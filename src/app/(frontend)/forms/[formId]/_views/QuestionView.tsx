@@ -41,17 +41,20 @@ export function QuestionView({ responseId, section, question }: Props) {
 		| undefined
 		| null;
 
-	const editor = useEditor({
-		extensions: [StarterKit],
-		content: sectionDescription ? sectionDescription[0] : undefined,
-		editorProps: {
-			attributes: {
-				class:
-					"max-w-full prose prose-sm sm:prose-base lg:prose-lg font-pretendard focus:outline-none py-4 *:leading-normal",
+	const editor = useEditor(
+		{
+			extensions: [StarterKit],
+			content: sectionDescription ? sectionDescription[0] : undefined,
+			editorProps: {
+				attributes: {
+					class:
+						"max-w-full prose prose-sm sm:prose-base lg:prose-lg font-pretendard focus:outline-none py-4 *:leading-normal",
+				},
 			},
+			editable: false,
 		},
-		editable: false,
-	});
+		[sectionDescription],
+	);
 
 	const [valid, setValid] = useState(false);
 	const [value, setValue] = useState<string>("");
