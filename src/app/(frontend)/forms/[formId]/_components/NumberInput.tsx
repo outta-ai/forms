@@ -17,8 +17,10 @@ export function NumberInput({ className }: Props) {
 		<BaseNumberInput
 			className={cn(className)}
 			value={Number(value)}
-			onChange={(e) => setValue(e.toString())}
-			onBlur={() => setValid(!Number.isNaN(Number(value)))}
+			onChange={(e) => {
+				setValue(e.toString());
+				setValid(true);
+			}}
 		/>
 	);
 }
