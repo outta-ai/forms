@@ -1,0 +1,222 @@
+name: Build and Deploy (Main)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        runner:
+          - arch: arm64
+            tags: 
+            - codebuild-blis-github-runner-${{ github.run_id }}-${{ github.run_attempt }}
+            - image:arm-3.0
+            - instance-size:small
+          - arch: amd64
+            tags:
+            - ubuntu-latest
+    runs-on: ${{ matrix.runner.tags }}
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=571600834794.dkr.ecr.ap-northeast-2.amazonaws.com/moby/buildkit:latest
+            network=host
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ runner.arch }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ runner.arch }}-
+        
+      - name: Get Git Data
+        id: git_data
+        run: |
+          if [ "${{ github.ref_name }}" = 'main' ]; then
+            echo "tag_name=latest" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Create .env file
+        run: |
+            echo '${{ vars.WEB_ENV }}' > .env
+            echo '${{ secrets.WEB_ENV_SECRET }}' >> .env
+
+      - name: Cache Docker Mount Caches
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            var-cache-apt
+            var-lib-apt
+            pnpm-store
+          key: ${{ runner.os }}-${{ runner.arch }}-cache-${{ hashFiles('Dockerfile') }}
+
+      - name: Do a cache dance
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        with:
+          cache-map: |
+            {
+              "var-cache-apt": "/var/cache/apt",
+              "var-lib-apt": "/var/lib/apt",
+              "pnpm-store": "/pnpm/store"
+            }
+          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+
+      - name: Build and Push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          provenance: false
+          platforms: linux/${{ matrix.runner.arch }}
+          build-args: |
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.sha_short }}-${{ matrix.runner.arch }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.tag_name }}-${{ matrix.runner.arch }}
+
+  create-manifests:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Get Git Data
+        id: git_data
+        run: |
+          if [ "${{ github.ref_name }}" = 'main' ]; then
+            echo "tag_name=latest" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Create SHA manifest and push
+        run: |
+          docker manifest create \
+            ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.sha_short }} \
+            --amend ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.sha_short }}-amd64 \
+            --amend ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.sha_short }}-arm64
+          docker manifest push ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.sha_short }}
+
+      - name: Create Tag manifest and push
+        run: |
+          docker manifest create \
+            ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.tag_name }} \
+            --amend ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.tag_name }}-amd64 \
+            --amend ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.tag_name }}-arm64
+          docker manifest push ${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.tag_name }}
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - create-manifests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Get Git Data
+        id: git_data
+        run: |
+          if [ "${{ github.ref_name }}" = 'main' ]; then
+            echo "tag_name=latest" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Create .env file
+        run: |
+            echo "# =====  VARS  =====" > .env
+            echo '${{ vars.WEB_ENV }}' >> .env
+            echo "" >> .env
+            echo "# ===== SECRET =====" >> .env
+            echo '${{ secrets.WEB_ENV_SECRET }}' >> .env
+            aws s3 cp .env s3://${{ secrets.S3_ENV_BUCKET }}/${{ steps.git_data.outputs.sha_short }}/.env
+            aws s3 cp .env s3://${{ secrets.S3_ENV_BUCKET }}/${{ steps.git_data.outputs.tag_name }}/.env
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.TASK_DEFINITION }} |
+          jq -r '.taskDefinition |
+            del(.taskDefinitionArn,.revision,.status,.requiresAttributes,.compatibilities,.registeredAt,.registeredBy) |
+            .containerDefinitions[0].image = "%IMAGE_NAME%" |
+            .containerDefinitions[].environmentFiles[0].value = "%ENV_NAME%"
+            ' > current-taskdef.json
+          sed -i "s|%IMAGE_NAME%|${{ steps.login-ecr.outputs.registry }}/${{ vars.REPOSITORY }}:${{ steps.git_data.outputs.sha_short }}|g" current-taskdef.json
+          sed -i "s|%ENV_NAME%|arn:aws:s3:::${{ secrets.S3_ENV_BUCKET }}/${{ steps.git_data.outputs.sha_short }}/.env|g" current-taskdef.json
+          aws ecs register-task-definition --cli-input-json file://current-taskdef.json > /dev/null
+          rm current-taskdef.json
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --task-definition ${{ secrets.TASK_DEFINITION }} \
+            --force-new-deployment > /dev/null

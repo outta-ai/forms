@@ -1,5 +1,3 @@
-import "./styles.css";
-
 import { TriangleAlert } from "lucide-react";
 
 export default async function HomePage() {
