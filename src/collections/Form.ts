@@ -125,6 +125,11 @@ export const Form: CollectionConfig = {
 					name: "require_login",
 					label: "로그인 필요",
 				},
+				{
+					type: "checkbox",
+					name: "restore_progress",
+					label: "진행 상태 복구",
+				},
 			],
 		},
 		{

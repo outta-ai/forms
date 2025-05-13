@@ -4,6 +4,7 @@ import { ErrorView } from "./ErrorView";
 import { QuestionView } from "./QuestionView";
 import { StartView } from "./StartView";
 import { FinishView } from "./FinishView";
+import { ClientQuestionView } from "./ClientQuestionView";
 
 type Props = {
 	form: Form;
@@ -45,6 +46,10 @@ export async function FormView({
 
 	if (response.finished) {
 		return <FinishView form={form} responseId={response.id} />;
+	}
+
+	if (!form.settings?.restore_progress) {
+		return <ClientQuestionView form={form} responseId={response.id} />;
 	}
 
 	const completedQuestions = response.data.map((q) => q.question);

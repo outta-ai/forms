@@ -229,6 +229,7 @@ export interface Form {
     disable_previous?: boolean | null;
     disable_new_response?: boolean | null;
     require_login?: boolean | null;
+    restore_progress?: boolean | null;
   };
   url?: string | null;
   updatedAt: string;
@@ -532,6 +533,7 @@ export interface FormSelect<T extends boolean = true> {
         disable_previous?: T;
         disable_new_response?: T;
         require_login?: T;
+        restore_progress?: T;
       };
   url?: T;
   updatedAt?: T;
