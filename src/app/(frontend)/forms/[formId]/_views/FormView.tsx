@@ -31,6 +31,10 @@ export async function FormView({ form, response, start, formPath }: Props) {
 		);
 	}
 
+	if (response.finished) {
+		return <FinishView form={form} responseId={response.id} />;
+	}
+
 	const completedQuestions = response.data.map((q) => q.question);
 
 	for (const section of form.sections) {
