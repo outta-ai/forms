@@ -10,9 +10,16 @@ type Props = {
 	response?: Response;
 	start: boolean;
 	formPath: string;
+	userId?: string;
 };
 
-export async function FormView({ form, response, start, formPath }: Props) {
+export async function FormView({
+	form,
+	response,
+	start,
+	formPath,
+	userId,
+}: Props) {
 	if (!form.sections) {
 		return <ErrorView errorId="no_sections" />;
 	}

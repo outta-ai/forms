@@ -6,6 +6,7 @@ import { base64URLToHex } from "@/lib/utils";
 import { ErrorView } from "./_views/ErrorView";
 import { FormView } from "./_views/FormView";
 import { LoginView } from "./_views/LoginView";
+import { cookies } from "next/headers";
 
 type Props = {
 	params: Promise<{
@@ -23,6 +24,9 @@ export default async function FormPage({ params, searchParams }: Props) {
 
 	const payload = await getPayload({ config });
 
+	const cookieStore = await cookies();
+	const cookieUserId = cookieStore.get("OUTTA_FORMS_USER_ID")?.value;
+
 	if (/^[A-Za-z0-9\-_]{16}$/.test(formId)) {
 		const id = base64URLToHex(formId);
 		const formById = await payload.find({
@@ -35,11 +39,15 @@ export default async function FormPage({ params, searchParams }: Props) {
 				return <LoginView formId={formId} />;
 			}
 
+			const userId = formById.docs[0].settings?.require_login
+				? session?.user.payload_id
+				: cookieUserId;
+
 			const response = await payload.find({
 				collection: "response",
 				where: {
 					form: { equals: formById.docs[0].id },
-					user: { equals: session?.user.payload_id },
+					user: { equals: userId },
 				},
 			});
 
@@ -49,6 +57,7 @@ export default async function FormPage({ params, searchParams }: Props) {
 					formPath={formId}
 					response={response.docs[0]}
 					start={"start" in searchParamsData}
+					userId={cookieUserId}
 				/>
 			);
 		}
@@ -64,11 +73,15 @@ export default async function FormPage({ params, searchParams }: Props) {
 	});
 
 	if (formBySlug.totalDocs === 1) {
+		const userId = formBySlug.docs[0].settings?.require_login
+			? session?.user.payload_id
+			: cookieUserId;
+
 		const response = await payload.find({
 			collection: "response",
 			where: {
 				form: { equals: formBySlug.docs[0].id },
-				user: { equals: session?.user.payload_id },
+				user: { equals: userId },
 			},
 		});
 
@@ -78,6 +91,7 @@ export default async function FormPage({ params, searchParams }: Props) {
 				formPath={formId}
 				response={response.docs[0]}
 				start={"start" in searchParamsData}
+				userId={cookieUserId}
 			/>
 		);
 	}

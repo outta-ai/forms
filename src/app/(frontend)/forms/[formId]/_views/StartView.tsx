@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 import type { Form } from "@/payload-types";
 
@@ -16,9 +16,10 @@ type Props = {
 	form: Form;
 	responseId?: string;
 	formPath: string;
+	userId?: string;
 };
 
-export function StartView({ form, responseId, formPath }: Props) {
+export function StartView({ form, responseId, formPath, userId }: Props) {
 	const router = useRouter();
 	const { data: session } = useSession();
 
@@ -36,17 +37,34 @@ export function StartView({ form, responseId, formPath }: Props) {
 		editable: false,
 	});
 
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+
+		if (!userId) {
+			const timestamp = Math.floor(Date.now() / 1000)
+				.toString(16)
+				.padStart(8, "0");
+			const randomBytes = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+				.map((byte) => byte.toString(16).padStart(2, "0"))
+				.join("");
+			const userId = timestamp + randomBytes;
+			document.cookie = `OUTTA_FORMS_USER_ID=${userId}; path=/; max-age=31536000; SameSite=Lax`;
+
+			router.refresh();
+		}
+	}, [router, userId]);
+
 	const onStart = useCallback(async () => {
 		if (!responseId) {
 			await ky.post<Response>("/api/response", {
 				json: {
 					form: form.id,
-					user: session?.user.payload_id,
+					user: session?.user.payload_id || userId,
 				},
 			});
 		}
 		router.replace(`/forms/${formPath}?start`);
-	}, [router, formPath, responseId, session?.user.payload_id, form.id]);
+	}, [router, formPath, responseId, session, userId, form.id]);
 
 	return (
 		<div className="w-full h-full [&&]:h-dvh py-3 md:py-12 px-3 md:px-6">
