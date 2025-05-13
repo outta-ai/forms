@@ -54,17 +54,20 @@ export function StartView({ form, responseId, formPath, userId }: Props) {
 		}
 	}, [router, userId]);
 
+	console.log(userId);
 	const onStart = useCallback(async () => {
 		if (!responseId) {
 			await ky.post<Response>("/api/response", {
 				json: {
 					form: form.id,
-					user: session?.user.payload_id || userId,
+					user: form.settings?.require_login
+						? session?.user.payload_id
+						: session?.user.payload_id || userId,
 				},
 			});
 		}
 		router.replace(`/forms/${formPath}?start`);
-	}, [router, formPath, responseId, session, userId, form.id]);
+	}, [router, formPath, responseId, session, userId, form]);
 
 	return (
 		<div className="w-full h-full [&&]:h-dvh py-3 md:py-12 px-3 md:px-6">

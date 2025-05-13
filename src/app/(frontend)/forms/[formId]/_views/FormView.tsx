@@ -29,12 +29,17 @@ export async function FormView({
 	}
 
 	if (!response?.data) {
-		return <StartView form={form} formPath={formPath} />;
+		return <StartView form={form} formPath={formPath} userId={userId} />;
 	}
 
 	if (response.data.length === 0 && !start) {
 		return (
-			<StartView form={form} formPath={formPath} responseId={response.id} />
+			<StartView
+				form={form}
+				formPath={formPath}
+				responseId={response.id}
+				userId={userId}
+			/>
 		);
 	}
 
