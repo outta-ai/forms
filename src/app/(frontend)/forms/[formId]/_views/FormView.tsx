@@ -49,6 +49,17 @@ export async function FormView({
 	}
 
 	if (!form.settings?.restore_progress) {
+		if (!start) {
+			return (
+				<StartView
+					form={form}
+					formPath={formPath}
+					userId={userId}
+					responseId={response.id}
+				/>
+			);
+		}
+
 		return <ClientQuestionView form={form} responseId={response.id} />;
 	}
 

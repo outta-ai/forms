@@ -82,6 +82,12 @@ export function ClientQuestionView({ form, responseId }: Props) {
 	const [optional, setOptional] = useState(false);
 	const [shown] = useState(new Date());
 
+	useEffect(() => {
+		const url = new URL(window.location.href);
+		url.searchParams.delete("start");
+		window.history.replaceState({}, "", url.toString());
+	}, []);
+
 	const saveResponse = useCallback(async () => {
 		if (typeof result === "string") return;
 		const [_, question] = result;

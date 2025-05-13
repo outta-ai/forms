@@ -54,7 +54,6 @@ export function StartView({ form, responseId, formPath, userId }: Props) {
 		}
 	}, [router, userId]);
 
-	console.log(userId);
 	const onStart = useCallback(async () => {
 		if (!responseId) {
 			await ky.post<Response>("/api/response", {
