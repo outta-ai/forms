@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { Form, Response } from "@/payload-types";
 
@@ -58,6 +58,7 @@ export function QuestionView({ responseId, section, question }: Props) {
 
 	const [valid, setValid] = useState(false);
 	const [value, setValue] = useState<string>("");
+	const [optional, setOptional] = useState(!!question.optional);
 	const [shown] = useState(new Date());
 
 	const saveResponse = useCallback(async () => {
@@ -86,8 +87,15 @@ export function QuestionView({ responseId, section, question }: Props) {
 		router.refresh();
 	}, [router, valid, question.id, responseId, shown, value]);
 
+	useEffect(() => {
+		setOptional(!!question.optional);
+		if (question.optional) {
+			setValid(true);
+		}
+	}, [question.optional]);
+
 	return (
-		<InputContext.Provider value={{ value, setValue, setValid }}>
+		<InputContext.Provider value={{ value, setValue, setValid, optional }}>
 			<div className="w-full h-full [&&]:h-dvh py-3 md:py-12 px-3 md:px-6">
 				<div className="container mx-auto flex flex-col h-full">
 					<div className="flex-1 overflow-y-auto">

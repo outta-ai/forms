@@ -18,7 +18,7 @@ type Props = {
 };
 
 export function MultipleSelectInput({ className, option }: Props) {
-	const { value, setValue, setValid } = useContext(InputContext);
+	const { value, setValue, setValid, optional } = useContext(InputContext);
 
 	const { data: options } = useQuery({
 		queryKey: ["option", typeof option === "string" ? option : option?.id],
@@ -57,7 +57,7 @@ export function MultipleSelectInput({ className, option }: Props) {
 							} else {
 								const newValue = currentValue.filter((v) => v !== option.id);
 								setValue(newValue.join(","));
-								setValid(newValue.length > 0);
+								setValid(optional || newValue.length > 0);
 							}
 						}}
 					/>

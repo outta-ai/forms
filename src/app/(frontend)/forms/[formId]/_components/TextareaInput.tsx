@@ -10,14 +10,14 @@ type Props = {
 };
 
 export function TextareaInput({ className }: Props) {
-	const { value, setValue, setValid } = useContext(InputContext);
+	const { value, setValue, setValid, optional } = useContext(InputContext);
 
 	return (
 		<Textarea
 			className={cn(className)}
 			value={value}
 			onChange={(e) => setValue(e.target.value)}
-			onBlur={() => setValid(value.length > 0)}
+			onBlur={() => setValid(optional || value.length > 0)}
 		/>
 	);
 }

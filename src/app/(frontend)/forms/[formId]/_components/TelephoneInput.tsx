@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function TelephoneInput({ className }: Props) {
-	const { value, setValue, setValid } = useContext(InputContext);
+	const { value, setValue, setValid, optional } = useContext(InputContext);
 
 	return (
 		<Input
@@ -20,14 +20,18 @@ export function TelephoneInput({ className }: Props) {
 			className={cn(className)}
 			value={value}
 			onChange={(e) => setValue(e.target.value)}
-			onBlur={() =>
+			onBlur={() => {
+				if (optional && value.trim() === "") {
+					setValid(true);
+					return;
+				}
 				setValid(
 					z
 						.string()
 						.regex(/^\d{2,3}-\d{3,4}-\d{4}$/)
 						.safeParse(value).success,
-				)
-			}
+				);
+			}}
 		/>
 	);
 }

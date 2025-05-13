@@ -218,6 +218,7 @@ export interface Form {
               question: string;
               type: 'text' | 'number' | 'email' | 'tel' | 'textarea' | 'single_choice' | 'multiple_choice';
               options?: (string | null) | Option;
+              optional?: boolean | null;
               id?: string | null;
             }[]
           | null;
@@ -520,6 +521,7 @@ export interface FormSelect<T extends boolean = true> {
               question?: T;
               type?: T;
               options?: T;
+              optional?: T;
               id?: T;
             };
         id?: T;

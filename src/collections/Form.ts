@@ -96,6 +96,11 @@ export const Form: CollectionConfig = {
 								],
 							},
 						},
+						{
+							type: "checkbox",
+							name: "optional",
+							label: "빈 값 허용",
+						},
 					],
 				},
 			],
